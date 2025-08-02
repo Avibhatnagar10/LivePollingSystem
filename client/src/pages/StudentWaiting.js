@@ -51,9 +51,9 @@ const StudentWaiting = () => {
         ✦ Intervue Poll
       </button>
       <div className="spinner" />
-      <h2 style={{ marginTop: '1rem' }}>
-        Waiting for the teacher to ask a question...
-      </h2>
+     <h2 style={{ marginTop: '1rem', fontWeight: 500, fontFamily: 'Sora, sans-serif', }}>
+  Hey {sessionStorage.getItem('studentName') || 'Student'}, wait for the teacher to ask a question...
+</h2>
 
       <style>{`
         .spinner {
