@@ -1,39 +1,41 @@
 // pages/StudentWaiting.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import socket from '../socket'; // make sure you have this
+import socket from '../socket';
 
 const StudentWaiting = () => {
   const navigate = useNavigate();
   const [isPollStarted, setIsPollStarted] = useState(false);
 
-useEffect(() => {
-  socket.on('poll-started', (pollData) => {
-    navigate('/student/poll', { state: pollData }); // passes poll data
-  });
+  useEffect(() => {
+    // Join waiting room
+    socket.emit('join-waiting-room');
 
-  return () => socket.off('poll-started');
-}, []);
+    // Handle poll start from teacher
+    const handlePollStarted = (pollData) => {
+      if (pollData?.pollId) {
+        sessionStorage.setItem('currentPoll', JSON.stringify(pollData));
+        setIsPollStarted(true);
+        navigate('/student/poll');
+      }
+    };
 
-useEffect(() => {
-  socket.on('poll-started', () => {
-    setIsPollStarted(true);
-  });
+    socket.on('poll-started', handlePollStarted);
 
-  return () => socket.off('poll-started'); // clean up
-}, []);
+    return () => {
+      socket.off('poll-started', handlePollStarted);
+    };
+  }, [navigate]);
 
   return (
-    <div style={{
-      fontFamily: 'Sora, sans-serif',
+     <div style={{
+       fontFamily: 'Sora, sans-serif',
       minHeight: '100vh',
-      backgroundColor: '#f9f9fb',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
       flexDirection: 'column',
-      gap: '1.5rem',
-      padding: '2rem'
+      textAlign: 'center'
     }}>
       <button style={{
         background: '#6c47ff',
@@ -43,21 +45,14 @@ useEffect(() => {
         padding: '0.4rem 1rem',
         fontSize: '0.75rem',
         fontWeight: 600,
-        cursor: 'default'
+        cursor: 'default',
+        marginBottom: '1.5rem'
       }}>
         ✦ Intervue Poll
       </button>
-
-      {!isPollStarted && <div className="spinner" />}
-
-      <h2 style={{
-        fontWeight: 600,
-        fontSize: '1.2rem',
-        textAlign: 'center',
-        color: '#333',
-        marginTop: '0.5rem'
-      }}>
-        {isPollStarted ? "Redirecting to poll..." : "Wait for the teacher to ask questions..."}
+      <div className="spinner" />
+      <h2 style={{ marginTop: '1rem' }}>
+        Waiting for the teacher to ask a question...
       </h2>
 
       <style>{`
@@ -68,8 +63,8 @@ useEffect(() => {
           border-top: 4px solid #6c47ff;
           border-radius: 50%;
           animation: spin 1s linear infinite;
+          margin-bottom: 1rem;
         }
-
         @keyframes spin {
           to { transform: rotate(360deg); }
         }
