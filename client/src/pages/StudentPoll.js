@@ -1,39 +1,55 @@
-// src/pages/StudentPoll.js
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import io from 'socket.io-client';
-
-const socket = io(process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000');
+import socket from '../socket';
 
 const StudentPoll = () => {
+  const navigate = useNavigate();
   const [poll, setPoll] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [submitted, setSubmitted] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
-    socket.on('poll-started', (data) => {
-      setPoll(data);
-      setSelectedIndex(null);
-      setSubmitted(false);
-    });
+    const stored = sessionStorage.getItem('currentPoll');
 
-    socket.on('poll-ended', () => {
+    if (!stored) {
+      console.warn('❌ No poll in sessionStorage. Redirecting...');
       navigate('/student/waiting');
-    });
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(stored);
+      if (parsed?.pollId && parsed?.question) {
+        setPoll(parsed);
+      } else {
+        throw new Error('⚠️ Invalid poll data');
+      }
+    } catch (err) {
+      console.error('🚨 Poll parse error:', err);
+      sessionStorage.removeItem('currentPoll');
+      navigate('/student/waiting');
+    }
+
+    // ✅ Listen for poll end
+    const handlePollEnd = () => {
+      console.log('📴 Poll ended by teacher');
+      sessionStorage.removeItem('currentPoll');
+      navigate('/student/waiting');
+    };
+
+    socket.on('poll-ended', handlePollEnd);
 
     return () => {
-      socket.off('poll-started');
-      socket.off('poll-ended');
+      socket.off('poll-ended', handlePollEnd);
     };
-  }, []);
+  }, [navigate]);
 
   const handleSubmit = () => {
-    if (selectedIndex === null || submitted || !poll?.id) return;
+    if (selectedIndex === null || submitted || !poll?.pollId) return;
 
     socket.emit('submit-answer', {
-      pollId: poll.id, // ✅ use poll.id
-      optionIndex: selectedIndex,
+      pollId: poll.pollId,
+      optionIndex: selectedIndex
     });
 
     setSubmitted(true);
@@ -41,9 +57,9 @@ const StudentPoll = () => {
 
   if (!poll) {
     return (
-      <div style={{ fontFamily: 'Sora, sans-serif', textAlign: 'center', paddingTop: '100px' }}>
+      <div style={{ textAlign: 'center', paddingTop: '100px', fontFamily: 'Sora, sans-serif' }}>
         <div className="spinner" />
-        <h2>Waiting for question...</h2>
+        <h2>Loading poll...</h2>
         <style>{`
           .spinner {
             margin: 1rem auto;
@@ -63,8 +79,9 @@ const StudentPoll = () => {
   }
 
   return (
-    <div style={{ fontFamily: 'Sora, sans-serif', maxWidth: '700px', margin: '3rem auto', padding: '2rem' }}>
+    <div style={{ fontFamily: 'Sora, sans-serif', maxWidth: '700px', margin: '3rem auto' }}>
       <h2 style={{ marginBottom: '1.5rem', fontWeight: 700 }}>{poll.question}</h2>
+
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         {poll.options.map((opt, index) => (
           <button
@@ -110,4 +127,3 @@ const StudentPoll = () => {
 };
 
 export default StudentPoll;
-    
