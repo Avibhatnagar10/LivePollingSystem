@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api/polls'; // change this to your hosted backend URL later
+const API_BASE = `${process.env.REACT_APP_BACKEND_URL}/api/polls`;
 
 export const createPoll = async (pollData) => {
   const res = await fetch(`${API_BASE}/create`, {
@@ -20,7 +20,7 @@ export const getAllPolls = async () => {
 };
 
 export const deletePoll = async (pollId) => {
-  const res = await fetch(`http://localhost:5000/api/polls/${pollId}`, {
+  const res = await fetch(`${API_BASE}/${pollId}`, {
     method: 'DELETE'
   });
 
