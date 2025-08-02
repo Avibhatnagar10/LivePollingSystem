@@ -19,21 +19,30 @@ const handleAskQuestion = async () => {
     const pollData = {
       question,
       options,
-      duration: 60000 // Optional: 60 seconds timeout
+      duration: parseInt(timer) * 1000
     };
 
-    // 1. Save poll to backend
     const { poll } = await createPoll(pollData);
 
-    // 2. Emit to all connected students
-    socket.emit('create-poll', {
+    const fullPollPayload = {
+      pollId: poll.id,
       question: poll.question,
       options: poll.options,
-      duration: 60000, // match above
-      pollId: poll.id // so student can respond with same ID
-    });
+      duration: poll.duration
+    };
 
-    // 3. Navigate to results with state
+    // Set for dev (optional)
+    sessionStorage.setItem('currentPoll', JSON.stringify(fullPollPayload));
+
+    // Emit to all students
+    socket.emit('poll-started', {
+  question: poll.question,
+  options: poll.options,
+  pollId: poll.id,
+  duration: poll.duration,
+});
+
+    // Navigate to teacher results page
     navigate('/results', { state: poll });
 
   } catch (error) {
@@ -41,6 +50,7 @@ const handleAskQuestion = async () => {
     console.error(error);
   }
 };
+
     const addOption = () => {
         if (options.length < 6) setOptions([...options, { text: '', isCorrect: null }]);
     };
