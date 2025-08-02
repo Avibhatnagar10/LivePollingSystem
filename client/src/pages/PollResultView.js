@@ -1,4 +1,5 @@
-import React from 'react';
+// src/pages/PollResultView.js
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const PollResultView = () => {
@@ -7,10 +8,13 @@ const PollResultView = () => {
 
   const { question, options, totalVotes = 0 } = location.state || {};
 
-  if (!question || !options) {
-    navigate('/');
-    return null;
-  }
+  useEffect(() => {
+    if (!question || !options) {
+      navigate('/');
+    }
+  }, [question, options, navigate]);
+
+  if (!question || !options) return null;
 
   const processedOptions = options.map(opt => {
     const votes = opt.votes || 0;
@@ -32,13 +36,13 @@ const PollResultView = () => {
             fontWeight: 600,
             fontSize: '0.95rem',
             cursor: 'pointer'
-          }}>
-          👁 View Poll history
+          }}
+        >
+          👁 View Poll History
         </button>
       </div>
 
-      <h3 style={{ fontSize: '1.4rem', margin: '2rem 0 1rem 0' }}>Question</h3>
-
+      <h3 style={{ fontSize: '1.4rem', margin: '2rem 0 0.5rem 0' }}>Question</h3>
       <div style={{
         border: '1px solid #ddd',
         borderRadius: '12px',
@@ -55,8 +59,12 @@ const PollResultView = () => {
         </div>
 
         <div style={{ padding: '1.5rem' }}>
+          <p style={{ textAlign: 'right', fontSize: '0.9rem', color: '#888', marginBottom: '1.5rem' }}>
+            Total Votes: {totalVotes}
+          </p>
+
           {processedOptions.map((opt, index) => (
-            <div key={index} style={{ marginBottom: '1rem' }}>
+            <div key={index} style={{ marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.4rem' }}>
                 <div style={{
                   width: '28px',
@@ -82,7 +90,7 @@ const PollResultView = () => {
               }}>
                 <div style={{
                   width: `${opt.percent}%`,
-                  backgroundColor: opt.isCorrect ? '#6c47ff' : '#d9d9d9',
+                  backgroundColor: opt.isCorrect === true ? '#6c47ff' : '#d9d9d9',
                   height: '100%',
                   transition: 'width 0.5s',
                   borderRadius: '10px'
@@ -94,7 +102,7 @@ const PollResultView = () => {
                   top: '50%',
                   transform: 'translateY(-50%)',
                   fontWeight: 600,
-                  color: opt.isCorrect ? '#6c47ff' : '#555'
+                  color: opt.isCorrect === true ? '#6c47ff' : '#555'
                 }}>
                   {opt.percent}%
                 </span>
