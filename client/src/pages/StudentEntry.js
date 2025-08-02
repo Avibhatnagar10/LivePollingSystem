@@ -1,3 +1,4 @@
+// src/pages/StudentEntry.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,7 +9,8 @@ const StudentEntry = () => {
   const handleContinue = () => {
     if (!name.trim()) return alert('Please enter your name');
     // You can also save to localStorage or context
-    navigate('/student/waiting', { state: { name } });
+    sessionStorage.setItem('studentName', name);
+    navigate('/student/waiting');
   };
 
   return (
